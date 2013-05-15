@@ -20,3 +20,5 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with this program as the file LICENSE.txt; if not, please see
 http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
+
+The application icon has been created from a oxygen icon called document-export-4.png (found at http://openiconlibrary.sourceforge.net/ ) and it is under Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0) license.

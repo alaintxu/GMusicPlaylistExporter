@@ -125,6 +125,7 @@ class UserInterface(QtGui.QMainWindow):
                      self.handleAllFinished)
         
     def initUI(self):
+        self.setWindowIcon(QtGui.QIcon('music-export.png'))
         changeSDK = QtGui.QAction('Change SDK folder', self)
         changeSDK.setStatusTip('Change SDK folder')
         changeSDK.triggered.connect(self.changeSDKFolder)
@@ -210,7 +211,8 @@ class UserInterface(QtGui.QMainWindow):
             QtGui.QMessageBox.No, QtGui.QMessageBox.No)
 
         if reply == QtGui.QMessageBox.Yes:
-            self.gmpe.remMusicDB()
+            if not self.gmpe == None:
+                self.gmpe.remMusicDB()
             event.accept()
         else:
             event.ignore()
@@ -239,15 +241,18 @@ class UserInterface(QtGui.QMainWindow):
         self.selected    =   []
         for item in self.list.selectedItems():
             self.selected.append(str(item.text()))
-        self.i=0
-        self.j=0
-        self.thread.setSelected(self.selected)
-        self.thread.setPlaylists(self.playlists)
-        self.thread.setGMPE(self.gmpe)
-        self.cancelBtn.setEnabled(1)
-        self.exportBtn.setEnabled(0)
-        self.thread.terminate()
-        self.thread.start()
+        if len(self.selected)==0:
+            QtGui.QMessageBox.question(self,'Error','Please, select the playlist(s) you want to export',QtGui.QMessageBox.Ok)
+        else:
+            self.i=0
+            self.j=0
+            self.thread.setSelected(self.selected)
+            self.thread.setPlaylists(self.playlists)
+            self.thread.setGMPE(self.gmpe)
+            self.cancelBtn.setEnabled(1)
+            self.exportBtn.setEnabled(0)
+            self.thread.terminate()
+            self.thread.start()
     def cancel_exporting(self):
         self.cancelBtn.setEnabled(0)
         self.thread.terminate()
