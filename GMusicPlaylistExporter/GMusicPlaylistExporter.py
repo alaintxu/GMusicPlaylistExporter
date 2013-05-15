@@ -246,14 +246,14 @@ class UserInterface(QtGui.QMainWindow):
         self.thread.setGMPE(self.gmpe)
         self.cancelBtn.setEnabled(1)
         self.exportBtn.setEnabled(0)
-        self.thread.quit()
+        self.thread.terminate()
         self.thread.start()
     def cancel_exporting(self):
         self.cancelBtn.setEnabled(0)
-        self.thread.quit()
-        self.pllabel("Cancelled")
+        self.thread.terminate()
+        self.pllabel.setText("Cancelled")
         self.plpbar.setValue(0)
-        self.slabel("Cancelled")
+        self.slabel.setText("Cancelled")
         self.spbar.setValue(0)
         self.exportBtn.setEnabled(1)
     def handleCopyNewPlaylist(self):
