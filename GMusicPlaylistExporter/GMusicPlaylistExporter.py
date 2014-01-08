@@ -9,6 +9,8 @@ from PyQt4 import QtGui
 from PyQt4 import QtCore
 import sqlite3 as lite
 import subprocess
+from mutagen.id3 import ID3,TIT2
+from mutagen.easyid3 import EasyID3
 
 class GMPE(object):
     musicdbpath     =   "/data/data/com.google.android.music/databases/music.db"
@@ -40,12 +42,13 @@ class GMPE(object):
                             m.album,
                             m.TrackNumber,
                             m.title,
-                            m.id
-                        FROM listitems as li
-                        JOIN music as m ON li.musicsourceid = m.SourceId
+                            m.id,
+                            m.year
+			    FROM music as m
+			    JOIN listitems as li ON li.MusicId = m.id
                         JOIN lists as l ON li.listid = l.id
                         WHERE l.ListType=0
-                        ORDER BY l.id, li.id;'''
+                        ORDER BY l.id, m.id;'''
             con = lite.connect('music.db')
             cur = con.cursor()    
             cur.execute(query)
@@ -60,8 +63,10 @@ class GMPE(object):
                 song['album']       = row[2]
                 song['tracknumber'] = row[3]
                 song['title']       = row[4]
-                song['id']          =   row[5]
+                song['id']          = row[5]
+                song['year']	    = row[6]
                 self.playlists[row[0]].append(song)
+                
             return self.playlists
         except Exception:
             return None
@@ -70,18 +75,35 @@ class GMPE(object):
         subprocess.call(["mkdir",'%s' % (path)])
         pass
     def copySong(self,plPath,song,i):
+    	original_song_path	= "%s/%d.mp3" % (self.musicfolder,song['id'])
+    	song_path		= '%s/%d-%s.mp3' % (plPath,i,song['title'])
         output  =   subprocess.call(
              ["%s/platform-tools/adb" % (self.androidSdkPath),
              "pull",
-             "%s/%d.mp3" % (self.musicfolder,song['id']),
-             '%s/%d-%s.mp3' % (plPath,i,song['title'])]
+             original_song_path,
+             song_path]
         )
         #command =   '%s/platform-tools/adb pull %s/%d.mp3 "%s/%d-%s.mp3"' % (self.androidSdkPath,self.musicfolder,song['id'],plPath,i,song['title']);
         #output = commands.getoutput(command)
+        
+        self.addID3Tag(song_path,song)
         if output==1 and not self.musicfolder==self.musicfolder2:
             self.musicfolder    =   self.musicfolder2
             print "changed device music folder"
             self.copySong(plPath,song,i)
+    def addID3Tag(self,song_path,song):
+    	print song_path
+    	tags = ID3()
+    	tags.add(TIT2(encoding=3, text=u"An example"))
+	tags.save(song_path)
+
+    	audio = EasyID3(song_path)
+	audio["title"] = song['title'].encode('utf8')
+	audio["album"] = song['album'].encode('utf8')
+	audio["artist"] = song['albumartist'].encode('utf8')
+	audio["date"] = unicode(song['year'])
+	audio["tracknumber"] = unicode(song['tracknumber'])
+	audio.save()
 class ExportThread(QtCore.QThread):
     def __init__(self,parent):
         QtCore.QThread.__init__(self, parent)
