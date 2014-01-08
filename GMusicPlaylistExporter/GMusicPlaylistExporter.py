@@ -5,6 +5,7 @@ Created on May 2, 2013
 @author: aperez
 '''
 import sys
+import re
 from PyQt4 import QtGui
 from PyQt4 import QtCore
 import sqlite3 as lite
@@ -43,7 +44,8 @@ class GMPE(object):
                             m.TrackNumber,
                             m.title,
                             m.id,
-                            m.year
+                            m.year,
+                            m.Rating
 			    FROM music as m
 			    JOIN listitems as li ON li.MusicId = m.id
                         JOIN lists as l ON li.listid = l.id
@@ -53,19 +55,25 @@ class GMPE(object):
             cur = con.cursor()    
             cur.execute(query)
             rows = cur.fetchall()
+            
+            self.playlists[u'ThumbsUp']	=	[]
         
             for row in rows:
                 if not row[0].encode('utf8') in self.playlists:
                     self.playlists[row[0].encode('utf8')]    =   []
                 song    =   {}
                 
-                song['albumartist'] = row[1]
-                song['album']       = row[2]
+                special_characters	=	'[:]'
+                
+                song['albumartist'] = re.sub(special_characters, '', row[1])
+                song['album']       = re.sub(special_characters, '', row[2])
                 song['tracknumber'] = row[3]
-                song['title']       = row[4]
+                song['title']       = re.sub(special_characters, '', row[4])
                 song['id']          = row[5]
                 song['year']	    = row[6]
                 self.playlists[row[0]].append(song)
+                if row[7]==5:
+                	self.playlists[u'ThumbsUp'].append(song)
                 
             return self.playlists
         except Exception:
@@ -93,17 +101,20 @@ class GMPE(object):
             self.copySong(plPath,song,i)
     def addID3Tag(self,song_path,song):
     	print song_path
-    	tags = ID3()
-    	tags.add(TIT2(encoding=3, text=u"An example"))
-	tags.save(song_path)
+    	try:
+	    	tags = ID3()
+	    	tags.add(TIT2(encoding=3, text=u"An example"))
+		tags.save(song_path)
 
-    	audio = EasyID3(song_path)
-	audio["title"] = song['title'].encode('utf8')
-	audio["album"] = song['album'].encode('utf8')
-	audio["artist"] = song['albumartist'].encode('utf8')
-	audio["date"] = unicode(song['year'])
-	audio["tracknumber"] = unicode(song['tracknumber'])
-	audio.save()
+	    	audio = EasyID3(song_path)
+		audio["title"]		= song['title']
+		audio["album"]		= song['album']
+		audio["artist"]		= song['albumartist']
+		audio["date"]		= unicode(song['year'])
+		audio["tracknumber"]	= unicode(song['tracknumber'])
+		audio.save()
+	except Exception as e:
+            print e
 class ExportThread(QtCore.QThread):
     def __init__(self,parent):
         QtCore.QThread.__init__(self, parent)
