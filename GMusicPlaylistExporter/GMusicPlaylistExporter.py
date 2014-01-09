@@ -36,6 +36,8 @@ class GMPE(object):
         subprocess.call(["rm","music.db"])
         pass
     def getPlaylistsFromMusicDB(self):
+        con	=	None
+        self.addThumbsUp()
         try:
             query   =   '''SELECT
                             l.name,
@@ -56,14 +58,14 @@ class GMPE(object):
             cur.execute(query)
             rows = cur.fetchall()
             
-            self.playlists[u'ThumbsUp']	=	[]
         
             for row in rows:
+                special_characters	=	'[:]'
+                
                 if not row[0].encode('utf8') in self.playlists:
-                    self.playlists[row[0].encode('utf8')]    =   []
+                    self.playlists[re.sub(special_characters, '', row[0])]    =   []
                 song    =   {}
                 
-                special_characters	=	'[:]'
                 
                 song['albumartist'] = re.sub(special_characters, '', row[1])
                 song['album']       = re.sub(special_characters, '', row[2])
@@ -72,12 +74,56 @@ class GMPE(object):
                 song['id']          = row[5]
                 song['year']	    = row[6]
                 self.playlists[row[0]].append(song)
-                if row[7]==5:
-                	self.playlists[u'ThumbsUp'].append(song)
-                
+    	    if con:
+        	con.close()
             return self.playlists
-        except Exception:
+        except Exception as e:
+        
+    	    if con:
+        	con.close()
+            print "Unable to get playlist from music.db"
+            print e
             return None
+            
+    def addThumbsUp(self):
+    	con	=	None
+    	try:
+    		
+    	    self.playlists[u'ThumbsUp']	=	[]
+    	    query   =   '''SELECT
+                            m.albumartist,
+                            m.album,
+                            m.TrackNumber,
+                            m.title,
+                            m.id,
+                            m.year,
+                            m.Rating
+			    FROM music as m
+                        WHERE m.Rating=5
+                        ORDER BY m.albumartist, m.year,m.album,m.TrackNumber;'''
+            con = lite.connect('music.db')
+            cur = con.cursor()    
+            cur.execute(query)
+            rows = cur.fetchall()
+            
+        
+            for row in rows:
+            	song    =   {}
+                
+                special_characters	=	'[:]'
+            	song['albumartist'] = re.sub(special_characters, '', row[0])
+                song['album']       = re.sub(special_characters, '', row[1])
+                song['tracknumber'] = row[2]
+                song['title']       = re.sub(special_characters, '', row[3])
+                song['id']          = row[4]
+                song['year']	    = row[5]
+                self.playlists[u'ThumbsUp'].append(song)
+    	    if con:
+        	con.close()
+    	except Exception as e:
+    	    print "Unable to add ThumbsUp playlist"
+    	    if con:
+        	con.close()
 
     def createDirectory(self,path):
         subprocess.call(["mkdir",'%s' % (path)])
@@ -265,6 +311,7 @@ class UserInterface(QtGui.QMainWindow):
         self.list.clear()
         if not self.playlists==None:
             for plname,playlist in self.playlists.items():
+            	print "Playlist:%s\nNofSongs:%d\n\n" % (plname,len(playlist))
                 item    =   QtGui.QListWidgetItem(plname)
                 self.list.addItem(item)
             self.list.show()
