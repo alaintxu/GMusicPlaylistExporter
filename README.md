@@ -1,7 +1,7 @@
 GMusicPlaylistExporter
 ======================
 
-Export all songs in GMusic playlists to folders. A rooted android device and Android SDK is needed in order to work. It is a python application developed in QT (PyQt).
+Export all songs in GMusic playlists to folders. A rooted android device with a custom rom and Android SDK is needed in order to work. It is a python application developed in QT (PyQt).
 
 Copyright
 =========
