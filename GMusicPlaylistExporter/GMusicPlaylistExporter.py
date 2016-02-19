@@ -15,7 +15,8 @@ from mutagen.easyid3 import EasyID3
 
 class GMPE(object):
     musicdbpath     =   "/data/data/com.google.android.music/databases/music.db"
-    musicfolder     =   "/storage/external_SD/Android/data/com.google.android.music/files/music"
+    #musicfolder     =   "/storage/external_SD/Android/data/com.google.android.music/files/music"
+    musicfolder     =   "/data/data/com.google.android.music/files/music"
     musicfolder2     =   "/sdcard/Android/data/com.google.android.music/files/music"
     playlists       =   {}
     special_characters    =    '[:\/?]'
